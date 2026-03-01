@@ -67,6 +67,8 @@ export const SwipeCard = memo(forwardRef<TinderCardHandle, SwipeCardProps>(
           ref={ref}
           preventSwipe={[...preventSwipe, "up", "down"]}
           swipeThreshold={100}
+          onPointerDown={isFront ? handlePointerDown : undefined}
+          onPointerUp={isFront ? handlePointerUp : undefined}
           onSwipe={(dir) => {
             // Filter out 'up'/'down' before calling parent
             if (dir === "left" || dir === "right") {
@@ -85,8 +87,6 @@ export const SwipeCard = memo(forwardRef<TinderCardHandle, SwipeCardProps>(
           <div
             className={`w-full h-full transition-transform duration-300 rounded-3xl ${isFront ? "scale-100" : "scale-95"
               }`}
-            onPointerDown={isFront ? handlePointerDown : undefined}
-            onPointerUp={isFront ? handlePointerUp : undefined}
           >
             <Card className={cn("relative h-full w-full overflow-hidden rounded-3xl border-border select-none isolate transform-gpu", isFront && "shadow-xl")}>
               <div className="absolute inset-0 bg-muted pointer-events-none rounded-3xl">
