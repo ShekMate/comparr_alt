@@ -2,7 +2,7 @@ name: Version and Publish
 
 on:
   push:
-    branches: [master, develop]
+    branches: [main, master, develop]
     paths-ignore:
       - 'README.md'
       - '.github/CONTRIBUTING.md'
@@ -17,8 +17,8 @@ env:
 
 jobs:
   release:
-    name: Semantic Release (master only)
-    if: github.ref_name == 'master' && github.repository != 'jakobbjelver/swiparr'
+    name: Semantic Release (main/master only)
+    if: (github.ref_name == 'main' || github.ref_name == 'master') && github.repository != 'jakobbjelver/swiparr'
     runs-on: ubuntu-latest
     permissions:
       contents: write   # required to create tags/releases
@@ -58,15 +58,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false   # don't keep GITHUB_TOKEN auth header
-      - name: Sync fork (master + tags)
+      - name: Sync fork (main + tags)
         env:
           SYNC_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
         run: |
           # Add fork remote using PAT
           git remote add fork "https://jakobbjelver:${SYNC_TOKEN}@github.com/jakobbjelver/swiparr.git"
 
-          # Sync master branch
-          git push fork HEAD:master --force
+          # Sync default stable branch on fork
+          git push fork HEAD:main --force
 
           # Sync tags
           git push fork --tags --force
@@ -81,7 +81,7 @@ jobs:
       always() &&
       (
         github.ref_name == 'develop' ||
-        (github.ref_name == 'master' && needs.release.outputs.published == 'true')
+        ((github.ref_name == 'main' || github.ref_name == 'master') && needs.release.outputs.published == 'true')
       ) &&
       (needs.release.result == 'success' || needs.release.result == 'skipped') &&
       (needs.sync_fork.result == 'success' || needs.sync_fork.result == 'skipped')
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.ref_name == 'master' && needs.release.outputs.git_tag || github.sha }}
+          ref: ${{ (github.ref_name == 'main' || github.ref_name == 'master') && needs.release.outputs.git_tag || github.sha }}
 
       - uses: docker/setup-buildx-action@v3
 
@@ -136,7 +136,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
           build-args: |
-            APP_VERSION=${{ github.ref_name == 'master' && format('v{0}', needs.release.outputs.version) || format('dev-{0}', env.SHORT_SHA) }}
+            APP_VERSION=${{ (github.ref_name == 'main' || github.ref_name == 'master') && format('v{0}', needs.release.outputs.version) || format('dev-{0}', env.SHORT_SHA) }}
 
       - name: Export digest
         run: |
@@ -185,10 +185,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Stable channel (master releases only)
-            type=raw,value=latest,enable=${{ github.ref_name == 'master' }}
-            type=raw,value=v${{ needs.release.outputs.version }},enable=${{ github.ref_name == 'master' }}
-            type=raw,value=${{ needs.release.outputs.version }},enable=${{ github.ref_name == 'master' }}
+            # Stable channel (main/master releases only)
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' || github.ref_name == 'master' }}
+            type=raw,value=v${{ needs.release.outputs.version }},enable=${{ github.ref_name == 'main' || github.ref_name == 'master' }}
+            type=raw,value=${{ needs.release.outputs.version }},enable=${{ github.ref_name == 'main' || github.ref_name == 'master' }}
 
             # Dev channel (develop only)
             type=raw,value=dev,enable=${{ github.ref_name == 'develop' }}

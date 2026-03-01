@@ -28,6 +28,8 @@ interface TinderCardProps {
   swipeThreshold?: number;
   flickOnSwipe?: boolean;
   className?: string;
+  onPointerDown?: React.PointerEventHandler<HTMLDivElement>;
+  onPointerUp?: React.PointerEventHandler<HTMLDivElement>;
 }
 
 export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
@@ -40,6 +42,8 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
       swipeThreshold = 100,
       flickOnSwipe = true,
       className,
+      onPointerDown,
+      onPointerUp,
     },
     ref
   ) => {
@@ -182,15 +186,10 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
         isAnimating.current = true;
         onSwipe?.(direction);
 
-        // Fly far enough to fully clear desktop viewport widths.
-        const flyVal = typeof window === "undefined" ? 300 : Math.max(window.innerWidth * 1.1, 300);
-        const targetX = direction === "left" ? -flyVal : flyVal;
-
         await controls.start({
-          x: targetX,
-          y: 0,
-          rotate: direction === "left" ? -20 : 20,
-          opacity: 0, // Ensure it fades out at the very end
+          x: direction === "left" ? -300 : 300,
+          y: y.get() + (velocityY * 2),
+          opacity: 0,
           transition: { duration: 0.25, ease: "easeOut" }
         });
 
@@ -221,6 +220,8 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
         dragElastic={0.7}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
         whileTap={{ cursor: "grabbing" }}
       >
         {children}
