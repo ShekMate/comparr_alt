@@ -182,17 +182,14 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
         isAnimating.current = true;
         onSwipe?.(direction);
 
-        // Calculate a target far off screen based on direction
-        const flyVal = 300;
-        let targetX = direction === "left" ? -flyVal : flyVal;
-
-        // Calculate Y based on trajectory to make it look like a physics throw
-        // We add the velocity to the current Y
-        let targetY = y.get() + (velocityY * 2);
+        // Fly far enough to fully clear desktop viewport widths.
+        const flyVal = typeof window === "undefined" ? 300 : Math.max(window.innerWidth * 1.1, 300);
+        const targetX = direction === "left" ? -flyVal : flyVal;
 
         await controls.start({
           x: targetX,
-          y: targetY,
+          y: 0,
+          rotate: direction === "left" ? -20 : 20,
           opacity: 0, // Ensure it fades out at the very end
           transition: { duration: 0.25, ease: "easeOut" }
         });
@@ -214,7 +211,7 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
     return (
       <motion.div
         className={className}
-        style={{ x, y, rotate, opacity }}
+        style={{ x, y, rotate, opacity, touchAction: "none" }}
         animate={controls}
         // Enable drag on X and Y
         drag={true}
@@ -222,6 +219,7 @@ export const FramerTinderCard = forwardRef<TinderCardHandle, TinderCardProps>(
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         // Higher elastic = more "floating" feel (0 to 1)
         dragElastic={0.7}
+        dragMomentum={false}
         onDragEnd={handleDragEnd}
         whileTap={{ cursor: "grabbing" }}
       >
