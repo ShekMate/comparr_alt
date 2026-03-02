@@ -10,6 +10,8 @@ interface UniversalViewProps {
   setTmdbToken: (val: string) => void;
   username: string;
   setUsername: (val: string) => void;
+  roomCode: string;
+  setRoomCode: (val: string) => void;
   loading: boolean;
   handleLogin: (e: React.FormEvent) => void;
   isJoining?: boolean;
@@ -22,6 +24,8 @@ export function UniversalView({
   setTmdbToken,
   username,
   setUsername,
+  roomCode,
+  setRoomCode,
   loading,
   handleLogin,
   isJoining,
@@ -63,7 +67,18 @@ export function UniversalView({
           className="bg-muted border-input"
           autoFocus
         />
-        <Button type="submit" className="w-full font-semibold mt-4" disabled={loading || !username}>
+
+        {!isJoining && (
+          <Input
+            placeholder="Room code"
+            value={roomCode}
+            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            className="bg-muted border-input font-mono tracking-widest uppercase"
+            maxLength={4}
+          />
+        )}
+
+        <Button type="submit" className="w-full font-semibold mt-4" disabled={loading || !username || (!isJoining && !roomCode)}>
           {loading ? (isJoining ? "Joining..." : "Starting...") : (isJoining ? "Join" : "Start")}
         </Button>
       </form>

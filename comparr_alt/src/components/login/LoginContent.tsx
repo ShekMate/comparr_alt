@@ -38,6 +38,7 @@ export default function LoginContent() {
   const [tmdbToken, setTmdbToken] = useState("");
   const [guestName, setGuestName] = useState("");
   const [guestSessionCode, setGuestSessionCode] = useState("");
+  const [roomCode, setRoomCode] = useState("");
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -148,7 +149,18 @@ export default function LoginContent() {
     e.preventDefault();
     setLoading(true);
 
+    const enteredRoomCode = roomCode.trim().toUpperCase();
+    const joinCode = sessionCodeParam || enteredRoomCode;
     const isTmdbJoin = selectedProvider === ProviderType.TMDB && !!sessionCodeParam;
+
+    if (selectedProvider === ProviderType.TMDB && !joinCode) {
+      toast.error("Room code is required", {
+        description: "Enter a room code to continue.",
+        position: "top-right"
+      });
+      setLoading(false);
+      return;
+    }
 
     const promise = async () => {
       if (isTmdbJoin) {
@@ -189,8 +201,8 @@ export default function LoginContent() {
         let callbackUrl = searchParams.get("callbackUrl");
         if (!callbackUrl) {
           callbackUrl = `${basePath}/`;
-          if (sessionCodeParam && !isTmdbJoin) {
-            callbackUrl += (callbackUrl.includes("?") ? "&" : "?") + `join=${sessionCodeParam}`;
+          if (joinCode && !isTmdbJoin) {
+            callbackUrl += (callbackUrl.includes("?") ? "&" : "?") + `join=${joinCode}`;
           }
         }
         window.location.href = callbackUrl;
@@ -344,6 +356,8 @@ export default function LoginContent() {
                   setUsername={setUsername}
                   loading={loading}
                   handleLogin={handleLogin}
+                  roomCode={roomCode}
+                  setRoomCode={setRoomCode}
                   isJoining={!!sessionCodeParam}
                   onProfilePictureChange={setProfilePicture}
                 />
